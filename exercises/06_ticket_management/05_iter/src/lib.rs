@@ -30,6 +30,31 @@ impl TicketStore {
     pub fn add_ticket(&mut self, ticket: Ticket) {
         self.tickets.push(ticket);
     }
+
+    pub fn iter(&self) -> TicketStoreIterator {
+        TicketStoreIterator {
+            ticketstore: self,
+            index: 0,
+        }
+    }
+}
+
+struct TicketStoreIterator<'a> {
+    ticketstore: &'a TicketStore,
+    index: usize,
+}
+
+impl<'a> Iterator for TicketStoreIterator<'a> {
+    type Item = &'a Ticket;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(result) = self.ticketstore.tickets.get(self.index) {
+            self.index += 1;
+            Some(result)
+        } else {
+            None
+        }
+    }
 }
 
 #[cfg(test)]

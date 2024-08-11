@@ -1,8 +1,3 @@
-// TODO: Replace `todo!()`s with the correct implementation.
-//  Implement `IntoIterator` for `&TicketStore`. The iterator should yield immutable
-//  references to the tickets, ordered by their `TicketId`.
-//  Implement additional traits on `TicketId` if needed.
-
 use std::collections::BTreeMap;
 use std::ops::{Index, IndexMut};
 use ticket_fields::{TicketDescription, TicketTitle};
@@ -13,7 +8,7 @@ pub struct TicketStore {
     counter: u64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TicketId(u64);
 
 #[derive(Clone, Debug, PartialEq)]
@@ -40,7 +35,7 @@ pub enum Status {
 impl TicketStore {
     pub fn new() -> Self {
         Self {
-            tickets: todo!(),
+            tickets: BTreeMap::new(),
             counter: 0,
         }
     }
@@ -54,16 +49,16 @@ impl TicketStore {
             description: ticket.description,
             status: Status::ToDo,
         };
-        todo!();
+        self.tickets.insert(id, ticket);
         id
     }
 
     pub fn get(&self, id: TicketId) -> Option<&Ticket> {
-        todo!()
+        self.tickets.get(&id)
     }
 
     pub fn get_mut(&mut self, id: TicketId) -> Option<&mut Ticket> {
-        todo!()
+        self.tickets.get_mut(&id)
     }
 }
 
@@ -92,6 +87,44 @@ impl IndexMut<TicketId> for TicketStore {
 impl IndexMut<&TicketId> for TicketStore {
     fn index_mut(&mut self, index: &TicketId) -> &mut Self::Output {
         &mut self[*index]
+    }
+}
+
+pub struct TicketStoreIterator<'a> {
+    ticketstore: &'a TicketStore,
+    next: TicketId,
+}
+
+impl<'a> Iterator for TicketStoreIterator<'a> {
+    type Item = Ticket;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut ticket_iter = self.ticketstore.tickets.iter();
+        match ticket_iter.find(|&t| t.0 == &self.next) {
+            Some(_) => {
+                let next_id = ticket_iter.next();
+                match next_id {
+                    Some(val) => {
+                        self.next = val.0.clone();
+                        Some(val.1.clone())
+                    }
+                    None => None,
+                }
+            }
+            None => None,
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a TicketStore {
+    type Item = Ticket;
+    type IntoIter = TicketStoreIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TicketStoreIterator {
+            ticketstore: self,
+            next: TicketId(0),
+        }
     }
 }
 

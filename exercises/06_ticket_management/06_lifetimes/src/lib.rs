@@ -1,6 +1,5 @@
 use ticket_fields::{TicketDescription, TicketTitle};
 
-// TODO: Implement the `IntoIterator` trait for `&TicketStore` so that the test compiles and passes.
 #[derive(Clone)]
 pub struct TicketStore {
     tickets: Vec<Ticket>,
@@ -33,6 +32,38 @@ impl TicketStore {
 
     pub fn iter(&self) -> std::slice::Iter<Ticket> {
         self.tickets.iter()
+    }
+}
+
+pub struct TicketStoreIter<'a> {
+    ticketstore: &'a TicketStore,
+    idx: usize,
+}
+
+impl<'a> Iterator for TicketStoreIter<'a> {
+    type Item = &'a Ticket;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let ret = self.ticketstore.tickets.get(self.idx);
+        match ret {
+            Some(val) => {
+                self.idx += 1;
+                Some(val)
+            }
+            None => None,
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a TicketStore {
+    type Item = &'a Ticket;
+    type IntoIter = TicketStoreIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TicketStoreIter {
+            ticketstore: self,
+            idx: 0,
+        }
     }
 }
 

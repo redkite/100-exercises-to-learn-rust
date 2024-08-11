@@ -5,7 +5,7 @@ use ticket_fields::{TicketDescription, TicketTitle};
 //  it contains using a `for` loop.
 //
 // Hint: you shouldn't have to implement the `Iterator` trait in this case.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TicketStore {
     tickets: Vec<Ticket>,
 }
@@ -33,6 +33,37 @@ impl TicketStore {
 
     pub fn add_ticket(&mut self, ticket: Ticket) {
         self.tickets.push(ticket);
+    }
+}
+
+impl IntoIterator for TicketStore {
+    type Item = Ticket;
+    type IntoIter = TicketStoreIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TicketStoreIntoIterator {
+            ticketstore: self,
+            index: 0,
+        }
+    }
+}
+
+pub struct TicketStoreIntoIterator {
+    ticketstore: TicketStore,
+    index: usize,
+}
+
+impl Iterator for TicketStoreIntoIterator {
+    type Item = Ticket;
+
+    fn next(&mut self) -> Option<Ticket> {
+        let result = self.ticketstore.tickets.get(self.index);
+        self.index += 1;
+
+        match result {
+            Some(result) => Some(result.clone()),
+            None => None,
+        }
     }
 }
 
